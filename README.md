@@ -7,12 +7,16 @@ Fast HTTP implementation for Go.
 # fasthttp might not be for you!
 fasthttp was design for some high performance edge cases. **Unless** your server/client needs to handle **thousands of small to medium requests per seconds** and needs a consistent low millisecond response time fasthttp might not be for you. **For most cases `net/http` is much better** as it's easier to use and can handle more cases. For most cases you won't even notice the performance difference.
 
+fasthttp是为一些高性能的边缘情况设计的。除非你的服务器/客户端需要每秒钟处理数以千计的中小型请求，并且需要一个稳定的低毫秒的响应时间，否则fasthttp可能不适合你。对于大多数情况来说，net/http要好得多，因为它更容易使用并且可以处理更多的情况。在大多数情况下，你甚至不会注意到性能的差别。
+
 
 ## General info and links
 
 Currently fasthttp is successfully used by [VertaMedia](https://vertamedia.com/)
 in a production serving up to 200K rps from more than 1.5M concurrent keep-alive
 connections per physical server.
+
+目前，fasthttp被VertaMedia成功地用于生产中，为每台物理服务器上超过1.5M的并发保持连接提供高达200K rps的服务。
 
 [TechEmpower Benchmark round 19 results](https://www.techempower.com/benchmarks/#section=data-r19&hw=ph&test=plaintext)
 
@@ -44,6 +48,9 @@ connections per physical server.
 
 In short, fasthttp server is up to 10 times faster than net/http.
 Below are benchmark results.
+
+简而言之，fasthttp服务器比net/http快10倍。
+下面是基准测试结果。
 
 *GOMAXPROCS=1*
 
@@ -178,11 +185,17 @@ There is [net/http -> fasthttp handler converter](https://godoc.org/github.com/v
 but it is better to write fasthttp request handlers by hand in order to use
 all of the fasthttp advantages (especially high performance :) ).
 
+不幸的是，fasthttp并没有提供与net/http相同的API。详情见FAQ。有一个net/http -> fasthttp处理程序转换器，但是为了使用所有fasthttp的优点（特别是高性能:) ），最好是手工编写fasthttp请求处理程序。
+
+
 Important points:
 
 * Fasthttp works with [RequestHandler functions](https://godoc.org/github.com/valyala/fasthttp#RequestHandler)
 instead of objects implementing [Handler interface](https://golang.org/pkg/net/http/#Handler).
 Fortunately, it is easy to pass bound struct methods to fasthttp:
+
+Fasthttp与RequestHandler函数一起工作，而不是实现Handler接口的对象。幸运的是，很容易将绑定的结构方法传递给fasthttp。
+
 
   ```go
   type MyHandler struct {
@@ -217,6 +230,9 @@ It contains all the functionality required for http request processing
 and response writing. Below is an example of a simple request handler conversion
 from net/http to fasthttp.
 
+RequestHandler只接受一个参数 - RequestCtx。它包含了http请求处理和响应编写所需的所有功能。下面是一个从net/http到fasthttp的简单请求处理程序转换的例子。
+
+
   ```go
   // net/http request handler
   requestHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -248,6 +264,8 @@ from net/http to fasthttp.
 * Fasthttp allows setting response headers and writing response body
 in an arbitrary order. There is no 'headers first, then body' restriction
 like in net/http. The following code is valid for fasthttp:
+
+Fasthttp允许以任意的顺序设置响应头和编写响应体。没有像net/http那样的 "先有头，后有身 "的限制。下面的代码对fasthttp有效。
 
   ```go
   requestHandler := func(ctx *fasthttp.RequestCtx) {
@@ -281,6 +299,8 @@ like in net/http. The following code is valid for fasthttp:
 * Fasthttp doesn't provide [ServeMux](https://golang.org/pkg/net/http/#ServeMux),
 but there are more powerful third-party routers and web frameworks
 with fasthttp support:
+
+Fasthttp不提供ServeMux，但有更强大的第三方路由器和Web框架支持Fasthttp。
 
   * [fasthttp-routing](https://github.com/qiangxue/fasthttp-routing)
   * [router](https://github.com/fasthttp/router)
@@ -374,6 +394,8 @@ Otherwise [data races](http://blog.golang.org/race-detector) are inevitable.
 Carefully inspect all the net/http request handlers converted to fasthttp whether
 they retain references to RequestCtx or to its' members after returning.
 RequestCtx provides the following _band aids_ for this case:
+
+非常重要! Fasthttp不允许在从RequestHandler返回后保留对RequestCtx或其成员的引用。否则，数据竞赛是不可避免的。仔细检查所有转换到Fasthttp的net/http请求处理程序，它们是否在返回后保留对RequestCtx或其成员的引用。RequestCtx为这种情况提供了以下的创可贴。
 
   * Wrap RequestHandler into [TimeoutHandler](https://godoc.org/github.com/valyala/fasthttp#TimeoutHandler).
   * Call [TimeoutError](https://godoc.org/github.com/valyala/fasthttp#RequestCtx.TimeoutError)
